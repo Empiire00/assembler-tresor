@@ -1,2 +1,9 @@
 # all swapfiles
 *.*~
+
+# the rest
+*.adf
+*.bin
+*.hex
+*.lst
+*.mcu8051ide
