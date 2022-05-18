@@ -36,12 +36,14 @@ password_change_successful:
 	clr	led.3
 	call	sleep
 	setb	led.3
+	jmp	ende
 
 password_change_failed:
 ;flash LED 2
 	clr	led.2
 	call	sleep
 	setb	led.2
+	jmp ende
 
 
 input:
@@ -51,6 +53,16 @@ input:
 	ret
 
 sleep:
+	mov	TMOD, #01
+	mov	TL0, #0f2h
+	mov	TH0, #0ffh
+	setb	TR0
+sleep_wait:
+	jnb	TF0, sleep_wait
+	clr	TR0
+	clr	TF0
 	ret
 
-	end
+ende:
+nop
+END
