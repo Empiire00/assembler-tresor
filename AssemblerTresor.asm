@@ -1,8 +1,11 @@
 Input1	equ	R2
 Input2	equ	R3
+Master1 equ	R4
+Master2 equ	R5
+LED	equ	R6 
 
 	cseg	at 0h
-	jmp	start_timer
+	jmp	init_program
 
 ;interrupt for timer1 
 	ORG	1Bh
@@ -32,5 +35,17 @@ start_timer:
 	setb	EA		;activate individual interrupts
 	setb	ET1		;activate interrupt for timer1
 	setb	TR1
-loop: jnb TF1, loop		;just for testing purposes
-nop
+	ret
+;loop: jnb TF1, loop		;just for testing purposes
+;nop
+
+init_program:
+mov A, #00h
+mov Master1, A
+mov Master2, A
+jmp main_loop
+
+main_loop:
+;wait for input (input routine)
+;jmp main_loop
+
