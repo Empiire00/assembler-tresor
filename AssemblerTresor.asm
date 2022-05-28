@@ -52,12 +52,12 @@ reset_input:
 	ret
 
 init:
-	call reset_input
+	call	reset_input
 
 
 ;begin of input routine
 input_routine:
-	call 	reset_input
+	call	reset_input
 input_loop:
 	ACall	Eingabe
 	CJNE	R0, #10000b, erste_zahl
@@ -329,7 +329,7 @@ LUT1:
 ;end of input routine
 
 ;start of password check routine
-password_check:	;check password
+password_check:			;check password
 	mov	A, Input1
 	subb	A, Master1
 	jnz	false_input	; if first part of password wrong, jump to false_input
@@ -344,79 +344,80 @@ password_check:	;check password
 
 ;begin of false input routine
 false_input:
-mov a, R6
-anl a, #11100000b ;clean input (set all bit exept 7,6 and 5 to 0)
+	mov	a, R6
+	anl	a, #11100000b	;clean input (set all bit exept 7,6 and 5 to 0)
 
 ;check if 3 fails
-cjne a, #11100000b, inc_fail_count
-ajmp fail_lock
+	cjne	a, #11100000b, inc_fail_count
+	ajmp	fail_lock
 
 ;check count of fails
 inc_fail_count:
 
 ;check if zero fails then make one
-cjne a, #00000000b, go_ahead
-ajmp set_to_one_fail
+	cjne	a, #00000000b, go_ahead
+	ajmp	set_to_one_fail
 
 ;check if one or two fails then make two or three
 go_ahead:
-cjne a, #00100000b, set_to_three_fail
-ajmp set_to_two_fail
+	cjne	a, #00100000b, set_to_three_fail
+	ajmp	set_to_two_fail
 
 ;set akku to one fail
 set_to_one_fail:
-mov a, #00100000b
-ajmp output_false_input
+	mov	a, #00100000b
+	ajmp	output_false_input
 
 ;set akku to two fails
-set_to_two_fail: 
-mov a, #01100000b
-ajmp output_false_input
+set_to_two_fail:
+	mov	a, #01100000b
+	ajmp	output_false_input
 
 ;set akku to three fails
 set_to_three_fail:
-mov a, #11100000b
+	mov	a, #11100000b
 
 output_false_input:
-mov r6, a ;write akku to r6
-xrl a, #11111111b ;invert byte for output
-mov P3, a ;write akku to Port 3
+	mov	r6, a		;write akku to r6
+	xrl	a, #11111111b	;invert byte for output
+	mov	P3, a		;write akku to Port 3
 
 ;call reset_input
-AJMP main_loop
+	AJMP	main_loop
 
 ;dead lock
 fail_lock:
 
-Ajmp fail_lock
+	Ajmp	fail_lock
 ;end of false_input
-nop
+	nop
 
 ;begin tresor open routine
 open_tresor:
-mov a, r6	;write r6 into akku
-setb a.0		;set open bit to true
+	mov	a, r6		;write r6 into akku
+	setb	a.0		;set open bit to true
 ;clear failed tries
-clr a.5	
-clr a.6
-clr a.7
+	clr	a.5
+	clr	a.6
+	clr	a.7
 
-mov r6,a	;write akku back into r6
-xrl a, #11111111b ;invert byte for output
-mov P3, a	;output a on Port 3
-ret
+	mov	r6, a		;write akku back into r6
+	xrl	a, #11111111b	;invert byte for output
+	mov	P3, a		;output a on Port 3
+	ret
 ;end of tresor open routine
 
 init_program:
 	mov	A, #00h
 	mov	Master1, A
 	mov	Master2, A
-  ;mov r6, #00100001b; init for false_input
+	;mov r6, #00100001b; init for false_input
 	jmp	main_loop
 
 main_loop:
-call input_routine
-call password_check
-jmp main_loop
+	call	input_routine
+	call	password_check
+	call	open_tresor
+	jmp	main_loop
 
-end
+	end
