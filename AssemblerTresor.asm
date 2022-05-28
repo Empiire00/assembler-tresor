@@ -392,6 +392,21 @@ Ajmp fail_lock
 ;end of false_input
 nop
 
+;begin tresor open routine
+open_tresor:
+mov a, r6	;write r6 into akku
+setb a.0		;set open bit to true
+;clear failed tries
+clr a.5	
+clr a.6
+clr a.7
+
+mov r6,a	;write akku back into r6
+xrl a, #11111111b ;invert byte for output
+mov P3, a	;output a on Port 3
+ret
+;end of tresor open routine
+
 init_program:
 	mov	A, #00h
 	mov	Master1, A
