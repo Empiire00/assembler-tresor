@@ -1,11 +1,10 @@
 	ORG	00H
-Temp1	equ	R0
+Temp1	equ	R7
 Temp2	equ	R1
 Input1	equ	R2
 Input2	equ	R3
 Master1	equ	R4
 Master2	equ	R5
-led	equ	P3
 LED	equ	R6
 
 	cseg	at 0h
@@ -22,9 +21,7 @@ LED	equ	R6
 timer_ended:
 	clr	TR1
 	clr	TF1
-	mov	A, #0ffh
-	mov	Input1, A
-	mov	Input2, A
+	call	reset_input
 	ret
 
 stop_timer:
@@ -36,7 +33,7 @@ start_timer:
 	call	stop_timer	;stop timer (if already running)
 	mov	TMOD, #10h
 	mov	TL1, #0h	;setup timer
-	mov	TH1, #0ffh
+	mov	TH1, #0Fh
 	setb	EA		;activate individual interrupts
 	setb	ET1		;activate interrupt for timer1
 	setb	TR1
@@ -67,6 +64,7 @@ input_loop:
 	LJMP	input_loop
 
 erste_Zahl:
+	CALL	start_timer
 	CALL	check_for_numbers
 	MOV	A, R0
 	MOV	48h, A
@@ -87,6 +85,7 @@ erste_zahl_change:
 	;warten bis zahl losgelseen und eine andere gedrückt jm zu 2.zahl
 
 zweite_Zahl:
+	CALL	start_timer
 	CALL	check_for_numbers
 	MOV	A, R0
 	MOV	48h, A
@@ -111,6 +110,7 @@ zweite_zahl_change:
 	JMP	zweite_zahl_change
 
 dritte_Zahl:
+	CALL	start_timer
 	CALL	check_for_numbers
 	MOV	A, R0
 	MOV	R3, A
@@ -131,6 +131,7 @@ dritte_zahl_change:
 
 
 vierte_Zahl:
+	CALL	start_timer
 	CALL	check_for_numbers
 	MOV	A, R0
 	MOV	48h, A
@@ -146,16 +147,20 @@ vierte_Zahl:
 	;Zahlen
 
 final:
+	CALL	start_timer
 	ACall	Eingabe
 	MOV	A, R0
 	CJNE	a, #1010b, weiter1
-;call change
+	CALL	stop_timer
+	call change_password
 weiter1:
 	CJNE	a, #1111b, weiter2
+	CALL	stop_timer
 	ret
 ;call pwcheck
 weiter2:
 	CJNE	a, #1101b, final
+	call	stop_timer
 	JMP	init
 ;warten bis A oder #  oder Abbruch Gedrückt
 
@@ -412,14 +417,14 @@ open_tresor:
 
 ;begin change password routine
 change_password:		;change the master password, correct password was already entered
-	call	input
+	call	input_routine
 ;copy input to R1/R2
 	mov	A, Input1
 	mov	Temp1, A
 	mov	A, Input2
 	mov	Temp2, A
 
-	call	input
+	call	input_routine
 ;check if temp matches input
 	mov	A, Input1
 	subb	A, Temp1
@@ -436,24 +441,18 @@ change_password:		;change the master password, correct password was already ente
 
 password_change_successful:
 ;flash LED 3
-	clr	led.3
+	clr	p3.3
 	call	sleep
-	setb	led.3
-	jmp	ende
+	setb	p3.3
+	jmp	main_loop
 
 password_change_failed:
 ;flash LED 2
-	clr	led.2
+	clr	p3.2
 	call	sleep
-	setb	led.2
-	jmp ende
+	setb	p3.2
+	jmp main_loop
 
-
-input:
-	mov	A, #00010001b
-	mov	Input1, A
-	mov	Input2, A
-	ret
 
 sleep:
 	mov	TMOD, #01
