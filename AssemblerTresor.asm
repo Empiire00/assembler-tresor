@@ -320,6 +320,23 @@ LUT1:
 
 ;end of input routine
 
+;start of password check routine
+password_check:	;check password
+	mov	A, Input1
+	subb	A, Master1
+	jnz	false_input	; if first part of password wrong, jump to false_input
+	mov	A, Input2
+	subb	A, Master2
+	jnz	false_input	; if second part of password wrong, jump to false_input
+	ret
+	;don't jump if password was correct, use automatic callback from 'call'
+
+;end of password check routine
+
+false_input:
+;todo
+nop
+
 init_program:
 	mov	A, #00h
 	mov	Master1, A
