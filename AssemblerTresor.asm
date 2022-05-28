@@ -15,26 +15,27 @@ Start:
 	LJMP START
 	
 erste_Zahl:
-call check_for_numbers
+CALL check_for_numbers
 MOV A, R0
-MOV R2, A
-MOV 48h, A 
-Acall Display
-ACall Eingabe
+MOV 48h, A
+;ORL A, #11110000b
+MOV R2, A 
+ACALL Display
+ACALL Eingabe
 MOV A, R0
 CJNE A,48h, erste_zahl_change
-jmp erste_Zahl
+JMP erste_Zahl
 
 erste_zahl_change:
 	CJNE R0,#10000b, zweite_Zahl
-	ACall Eingabe
-	jmp erste_zahl_change
+	ACALL Eingabe
+	JMP erste_zahl_change
 	;schreib eingaeb in Speicher fuer erste Zahl
 	;Zahlen
 	;warten bis zahl losgelseen und eine andere gedrückt jm zu 2.zahl
 	
 zweite_Zahl:
-call check_for_numbers
+CALL check_for_numbers
 MOV A, R0
 MOV 48h, A
 RL A
@@ -43,42 +44,42 @@ RL A
 RL A
 ORL A, R2
 MOV R2, A 
-Acall Display
-ACall Eingabe
+ACALL Display
+ACALL Eingabe
 MOV A, R0
 CJNE A,48h, zweite_zahl_change
 	;schreib eingaeb in Speicher fuer zweite Zahl
 	;Zahlen
 	;warten bis zahl losgelseen und eine andere gedrückt jm zu 2.zahl
-	jmp zweite_Zahl
+	JMP zweite_Zahl
 
 zweite_zahl_change:
 	CJNE R0,#10000b, dritte_Zahl
 	ACall Eingabe
-	jmp zweite_zahl_change
+	JMP zweite_zahl_change
 
 dritte_Zahl:
-call check_for_numbers
+CALL check_for_numbers
 MOV A, R0
 MOV R3, A
 MOV 48h, A 
-Acall Display
-ACall Eingabe
+ACALL Display
+ACALL Eingabe
 MOV A, R0
 CJNE A,48h, dritte_zahl_change
 
-jmp dritte_Zahl
+JMP dritte_Zahl
 	;schreib eingaeb in Speicher fuer dritte Zahl
 	;Zahlen
 	;warten bis zahl losgelseen und eine andere gedrückt jm zu 2.zahl
 dritte_zahl_change:
 	CJNE R0,#10000b, vierte_Zahl
-	ACall Eingabe
-	jmp dritte_zahl_change
+	ACALL Eingabe
+	JMP dritte_zahl_change
 
 	
 vierte_Zahl:
-call check_for_numbers
+CALL check_for_numbers
 MOV A, R0
 MOV 48h, A
 RL A
@@ -87,7 +88,7 @@ RL A
 RL A
 ORL A, R3
 MOV R3, A 
-call Display
+CALL Display
 
 ;schreib eingaeb in Speicher fuer vierte Zahl
 	;Zahlen
@@ -95,28 +96,29 @@ call Display
 final:	
 ACall Eingabe
 MOV A, R0
-cjne a, #1010b ,weiter1
+CJNE a, #1010b ,weiter1
 ;call change
 weiter1:
-cjne a, #1111b ,weiter2
+CJNE a, #1111b ,weiter2
 ;call pwcheck
 weiter2:
-cjne a, #1101b, final
-jmp init
-	;warten bis A oder #  oder Abbruch Gedrückt
+CJNE a, #1101b, final
+JMP init
+;warten bis A oder #  oder Abbruch Gedrückt
 
+;checks if the pressed key is a number
 Check_for_numbers:
 Mov 	A, R0
-inc a
-inc a
-inc a
-inc a
-inc a
-inc a
-anl a, #00010000b
-cjne a, #10000b , return
-call Eingabe
-jmp Check_for_numbers
+INC a
+INC a
+INC a
+INC a
+INC a
+INC a
+ANL a, #00010000b
+CJNE a, #10000b , return
+CALL Eingabe
+JMP Check_for_numbers
 return:
 RET
 
@@ -212,45 +214,52 @@ Call Display
 DISPLAY:
 	
 	;erst zahl
-	mov a, R2
-	anl a,#00001111b
+	MOV a, R2
+	ANL a,#00001111b
 	MOV 	DPTR,#LUT1
 	MOVC 	A,@A+DPTR
-	Mov 	P1, #00000001b
+	MOV	P2, #00h
+	MOV 	P1, #00000001b
         MOV 	P2,A
-        Mov 	P1, #00000000b   
+        MOV 	P1, #00000000b   
+        
         ;zweite Zahl
-        mov a, R2
-        anl a,#11110000b
+        MOV a, R2
+        ANL a,#11110000b
 	RR a
 	RR a
 	RR a
 	RR a
 	MOV 	DPTR,#LUT1
 	MOVC 	A,@A+DPTR
-	Mov 	P1, #00000010b
+	MOV	P2, #00h
+	MOV 	P1, #00000010b
         MOV 	P2,A 
-        Mov 	P1, #00000000b
+        MOV 	P1, #00000000b
+        
         ;dritte zahl
-	mov a, R3
-	anl a,#00001111b
+	MOV a, R3
+	ANL a,#00001111b
 	MOV 	DPTR,#LUT1
 	MOVC 	A,@A+DPTR
-	Mov 	P1, #00000100b
+	MOV 	P2, #00h
+	MOV 	P1, #00000100b
         MOV 	P2,A  
-        Mov 	P1, #00000000b
+        MOV 	P1, #00000000b
+        
         ;vierte Zahl
-        mov a, R3
-        anl a,#11110000b
+        MOV a, R3
+        ANL a,#11110000b
 	RR a
 	RR a
 	RR a
 	RR a
 	MOV 	DPTR,#LUT1
 	MOVC 	A,@A+DPTR
-	Mov 	P1, #00001000b
+	MOV 	P2, #00h
+	MOV 	P1, #00001000b
         MOV 	P2,A 
-        Mov 	P1, #00000000b
+        MOV 	P1, #00000000b
             	
         RET
 
