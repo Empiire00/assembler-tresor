@@ -41,7 +41,7 @@ start_timer:
 ;loop: jnb TF1, loop		;just for testing purposes
 ;nop
 
-init:
+reset_input:
 	MOV	DPTR, #LUT	; MOVES START ADDR OF LUT TO DPTR
 	MOV	A, #11111111B	; LOADS A WITH ALL 1'S
 	mov	P1, #1111111b
@@ -49,12 +49,19 @@ init:
 	MOV	R0, #10000b
 	Mov	R2, #11111111b
 	Mov	R3, #11111111b
+	ret
+
+init:
+	call reset_input
+
 
 ;begin of input routine
 input_routine:
+	call 	reset_input
+input_loop:
 	ACall	Eingabe
 	CJNE	R0, #10000b, erste_zahl
-	LJMP	input_routine
+	LJMP	input_loop
 
 erste_Zahl:
 	CALL	check_for_numbers
@@ -142,6 +149,7 @@ final:
 ;call change
 weiter1:
 	CJNE	a, #1111b, weiter2
+	ret
 ;call pwcheck
 weiter2:
 	CJNE	a, #1101b, final
@@ -374,7 +382,8 @@ mov r6, a ;write akku to r6
 xrl a, #11111111b ;invert byte for output
 mov P3, a ;write akku to Port 3
 
-AJMP false_input
+;call reset_input
+AJMP main_loop
 
 ;dead lock
 fail_lock:
@@ -392,6 +401,7 @@ init_program:
 
 main_loop:
 call input_routine
+call password_check
 jmp main_loop
 
 end
