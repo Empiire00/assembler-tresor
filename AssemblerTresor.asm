@@ -66,7 +66,7 @@ erste_Zahl:
 	CALL	check_for_numbers
 	MOV	A, R0
 	MOV	48h, A
-;ORL A, #11110000b
+	ORL A, #11110000b
 	MOV	R2, A
 	CALL	Display
 	CALL	Eingabe
@@ -85,6 +85,9 @@ erste_zahl_change:
 zweite_Zahl:
 	CALL	start_timer
 	CALL	check_for_numbers
+	MOV	A,R2
+	ANL	A,#00001111b
+	MOV	R2, A	
 	MOV	A, R0
 	MOV	48h, A
 	RL	A
@@ -111,13 +114,13 @@ dritte_Zahl:
 	CALL	start_timer
 	CALL	check_for_numbers
 	MOV	A, R0
-	MOV	R3, A
 	MOV	48h, A
+	ORL A, #11110000b
+	MOV	R3, A
 	CALL	Display
 	CALL	Eingabe
 	MOV	A, R0
 	CJNE	A, 48h, dritte_zahl_change
-
 	JMP	dritte_Zahl
 	;schreib eingaeb in Speicher fuer dritte Zahl
 	;Zahlen
@@ -131,6 +134,9 @@ dritte_zahl_change:
 vierte_Zahl:
 	CALL	start_timer
 	CALL	check_for_numbers
+	MOV	A,R3
+	ANL	A,#00001111b
+	MOV	R3, A
 	MOV	A, R0
 	MOV	48h, A
 	RL	A
