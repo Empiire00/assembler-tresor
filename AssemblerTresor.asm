@@ -1,4 +1,4 @@
-	ORG	00H
+	org	00H
 Temp1	equ	R7
 Temp2	equ	R1
 Input1	equ	R2
@@ -8,58 +8,56 @@ Master2	equ	R5
 LED	equ	R6
 
 	cseg	at 0h
-	jmp	init_program
+	JMP	init_program
 
 ;interrupt for timer1 
-	ORG	1Bh
-	call	timer_ended
-	reti
+	org	1Bh
+	CALL	timer_ended
+	JMP main_loop
 
 
-	org	20h
+	org	30h
 
 timer_ended:
-	clr	TR1
-	clr	TF1
-	call	reset_input
-	ret
+	CLR	TR1
+	CLR	TF1
+	CALL	reset_input
+	RET
 
 stop_timer:
-	clr	TR1
-	ret
+	CLR	TR1
+	RET
 
 
 start_timer:
-	call	stop_timer	;stop timer (if already running)
-	mov	TMOD, #10h
-	mov	TL1, #0h	;setup timer
-	mov	TH1, #0Fh
-	setb	EA		;activate individual interrupts
-	setb	ET1		;activate interrupt for timer1
-	setb	TR1
-	ret
+	CALL	stop_timer	;stop timer (if already running)
+	MOV	TMOD, #10h
+	MOV	TL1, #0h	;setup timer
+	MOV	TH1, #0FEh
+	SETB	EA		;activate individual interrupts
+	SETB	ET1		;activate interrupt for timer1
+	SETB	TR1
+	RET
 ;loop: jnb TF1, loop		;just for testing purposes
 ;nop
 
 reset_input:
 	MOV	DPTR, #LUT	; MOVES START ADDR OF LUT TO DPTR
 	MOV	A, #11111111B	; LOADS A WITH ALL 1'S
-	mov	P1, #1111111b
+	MOV	P1, #1111111b
 	MOV	P2, #00000000B	; INITIALIZES P0 AS OUTPUT PORT
 	MOV	R0, #10000b
-	Mov	R2, #11111111b
-	Mov	R3, #11111111b
-	ret
+	MOV	R2, #11111111b
+	MOV	R3, #11111111b
+	RET
 
-init:
-	call	reset_input
 
 
 ;begin of input routine
 input_routine:
-	call	reset_input
+	CALL	reset_input
 input_loop:
-	ACall	Eingabe
+	CALL	Eingabe
 	CJNE	R0, #10000b, erste_zahl
 	LJMP	input_loop
 
@@ -70,15 +68,15 @@ erste_Zahl:
 	MOV	48h, A
 ;ORL A, #11110000b
 	MOV	R2, A
-	ACALL	Display
-	ACALL	Eingabe
+	CALL	Display
+	CALL	Eingabe
 	MOV	A, R0
 	CJNE	A, 48h, erste_zahl_change
 	JMP	erste_Zahl
 
 erste_zahl_change:
 	CJNE	R0, #10000b, zweite_Zahl
-	ACALL	Eingabe
+	CALL	Eingabe
 	JMP	erste_zahl_change
 	;schreib eingaeb in Speicher fuer erste Zahl
 	;Zahlen
@@ -95,8 +93,8 @@ zweite_Zahl:
 	RL	A
 	ORL	A, R2
 	MOV	R2, A
-	ACALL	Display
-	ACALL	Eingabe
+	CALL	Display
+	CALL	Eingabe
 	MOV	A, R0
 	CJNE	A, 48h, zweite_zahl_change
 	;schreib eingaeb in Speicher fuer zweite Zahl
@@ -106,7 +104,7 @@ zweite_Zahl:
 
 zweite_zahl_change:
 	CJNE	R0, #10000b, dritte_Zahl
-	ACall	Eingabe
+	CALL	Eingabe
 	JMP	zweite_zahl_change
 
 dritte_Zahl:
@@ -115,8 +113,8 @@ dritte_Zahl:
 	MOV	A, R0
 	MOV	R3, A
 	MOV	48h, A
-	ACALL	Display
-	ACALL	Eingabe
+	CALL	Display
+	CALL	Eingabe
 	MOV	A, R0
 	CJNE	A, 48h, dritte_zahl_change
 
@@ -126,7 +124,7 @@ dritte_Zahl:
 	;warten bis zahl losgelseen und eine andere gedrückt jm zu 2.zahl
 dritte_zahl_change:
 	CJNE	R0, #10000b, vierte_Zahl
-	ACALL	Eingabe
+	CALL	Eingabe
 	JMP	dritte_zahl_change
 
 
@@ -148,25 +146,35 @@ vierte_Zahl:
 
 final:
 	CALL	start_timer
-	ACall	Eingabe
+	CALL	Eingabe
 	MOV	A, R0
 	CJNE	a, #1010b, weiter1
 	CALL	stop_timer
-	call change_password
+	CALL change_password
 weiter1:
 	CJNE	a, #1111b, weiter2
 	CALL	stop_timer
-	ret
+	RET
 ;call pwcheck
+
 weiter2:
-	CJNE	a, #1101b, final
-	call	stop_timer
-	JMP	init
+	CJNE	a, #1110b, weiter3
+	CALL	stop_timer
+	CALL	reset_input
+	JMP main_loop
+weiter3:
+	CJNE	A, #00001101b, final
+	CALL	stop_timer
+	CALL close
+	JMP final
 ;warten bis A oder #  oder Abbruch Gedrückt
 
 ;checks if the pressed key is a number
 Check_for_numbers:
-	Mov	A, R0
+	MOV	A, R0
+	CJNE	A, #00001101b, not_close
+	CALL close
+not_close:
 	INC	a
 	INC	a
 	INC	a
@@ -266,7 +274,7 @@ WRITE:
 	MOV	DPTR, #LUT
 	MOVC	A, @A+DPTR
 	MOV	R0, A
-	Call	Display
+	CALL	Display
 	RET
 
 DISPLAY:
@@ -338,13 +346,13 @@ LUT1:
 
 ;start of password check routine
 password_check:			;check password
-	mov	A, Input1
-	subb	A, Master1
-	jnz	false_input	; if first part of password wrong, jump to false_input
-	mov	A, Input2
-	subb	A, Master2
-	jnz	false_input	; if second part of password wrong, jump to false_input
-	ret
+	MOV	A, Input1
+	SUBB	A, Master1
+	JNZ	false_input	; if first part of password wrong, jump to false_input
+	MOV	A, Input2
+	SUBB	A, Master2
+	JNZ	false_input	; if second part of password wrong, jump to false_input
+	RET
 	;don't jump if password was correct, use automatic callback from 'call'
 
 ;end of password check routine
@@ -352,134 +360,137 @@ password_check:			;check password
 
 ;begin of false input routine
 false_input:
-	mov	a, R6
-	anl	a, #11100000b	;clean input (set all bit exept 7,6 and 5 to 0)
+	MOV	a, R6
+	ANL	a, #11100000b	;clean input (set all bit exept 7,6 and 5 to 0)
 
 ;check if 3 fails
-	cjne	a, #11100000b, inc_fail_count
-	ajmp	fail_lock
+	CJNE	a, #11100000b, inc_fail_count
+	JMP	fail_lock
 
 ;check count of fails
 inc_fail_count:
 
 ;check if zero fails then make one
-	cjne	a, #00000000b, go_ahead
-	ajmp	set_to_one_fail
+	CJNE	a, #00000000b, go_ahead
+	JMP	set_to_one_fail
 
 ;check if one or two fails then make two or three
 go_ahead:
-	cjne	a, #00100000b, set_to_three_fail
-	ajmp	set_to_two_fail
+	CJNE	a, #00100000b, set_to_three_fail
+	JMP	set_to_two_fail
 
 ;set akku to one fail
 set_to_one_fail:
-	mov	a, #00100000b
-	ajmp	output_false_input
+	MOV	a, #00100000b
+	JMP	output_false_input
 
 ;set akku to two fails
 set_to_two_fail:
-	mov	a, #01100000b
-	ajmp	output_false_input
+	MOV	a, #01100000b
+	JMP	output_false_input
 
 ;set akku to three fails
 set_to_three_fail:
-	mov	a, #11100000b
+	MOV	a, #11100000b
 
 output_false_input:
-	mov	r6, a		;write akku to r6
-	xrl	a, #11111111b	;invert byte for output
-	mov	P3, a		;write akku to Port 3
+	MOV	r6, a		;write akku to r6
+	XRL	a, #11111111b	;invert byte for output
+	MOV	P3, a		;write akku to Port 3
 
 ;call reset_input
-	AJMP	main_loop
+	JMP	main_loop
 
 ;dead lock
 fail_lock:
 
-	Ajmp	fail_lock
+	JMP	fail_lock
 ;end of false_input
-	nop
+	NOP
 
 ;begin tresor open routine
 open_tresor:
-	mov	a, r6		;write r6 into akku
-	setb	a.0		;set open bit to true
+	MOV	a, r6		;write r6 into akku
+	SETB	a.0		;set open bit to true
 ;clear failed tries
-	clr	a.5
-	clr	a.6
-	clr	a.7
+	CLR	a.5
+	CLR	a.6
+	CLR	a.7
 
-	mov	r6, a		;write akku back into r6
-	xrl	a, #11111111b	;invert byte for output
-	mov	P3, a		;output a on Port 3
-	ret
+	MOV	r6, a		;write akku back into r6
+	XRL	a, #11111111b	;invert byte for output
+	MOV	P3, a		;output a on Port 3
+	RET
 ;end of tresor open routine
+close:
+	SETB  P3.0		
+	RET
 
 ;begin change password routine
 change_password:		;change the master password, correct password was already entered
-	call	input_routine
+	CALL	input_routine
 ;copy input to R1/R2
-	mov	A, Input1
-	mov	Temp1, A
-	mov	A, Input2
-	mov	Temp2, A
+	MOV	A, Input1
+	MOV	Temp1, A
+	MOV	A, Input2
+	MOV	Temp2, A
 
-	call	input_routine
+	CALL	input_routine
 ;check if temp matches input
-	mov	A, Input1
-	subb	A, Temp1
-	jnz	password_change_failed	; if first part of password wrong, jump to password_change_failed
-	mov	A, Input2
-	subb	A, Temp2
-	jnz	password_change_failed	; if second part of password wrong, jump to password_change_failed
+	MOV	A, Input1
+	SUBB	A, Temp1
+	JNZ	password_change_failed	; if first part of password wrong, jump to password_change_failed
+	MOV	A, Input2
+	SUBB	A, Temp2
+	JNZ	password_change_failed	; if second part of password wrong, jump to password_change_failed
 ;change master password
-	mov	A, Temp1
-	mov	Master1, A
-	mov	A, Temp2
-	mov	Master2, A
-	jmp	password_change_successful
+	MOV	A, Temp1
+	MOV	Master1, A
+	MOV	A, Temp2
+	MOV	Master2, A
+	JMP	password_change_successful
 
 password_change_successful:
 ;flash LED 3
-	clr	p3.3
-	call	sleep
-	setb	p3.3
-	jmp	main_loop
+	CLR	p3.3
+	CALL	sleep
+	SETB	p3.3
+	JMP	main_loop
 
 password_change_failed:
 ;flash LED 2
-	clr	p3.2
-	call	sleep
-	setb	p3.2
-	jmp main_loop
+	CLR	p3.2
+	CALL	sleep
+	SETB	p3.2
+	JMP main_loop
 
 
 sleep:
-	mov	TMOD, #01
-	mov	TL0, #0f2h
-	mov	TH0, #0ffh
-	setb	TR0
+	MOV	TMOD, #01
+	MOV	TL0, #0f2h
+	MOV	TH0, #0ffh
+	SETB	TR0
 sleep_wait:
-	jnb	TF0, sleep_wait
-	clr	TR0
-	clr	TF0
-	ret
+	JNB	TF0, sleep_wait
+	CLR	TR0
+	CLR	TF0
+	RET
 
 ende:
-nop
+NOP
 
 ;end of change password routine
 init_program:
-	mov	A, #00h
-	mov	Master1, A
-	mov	Master2, A
+	MOV	A, #00h
+	MOV	Master1, A
+	MOV	Master2, A
 	;mov r6, #00100001b; init for false_input
-	jmp	main_loop
+	JMP	main_loop
 
 main_loop:
-	call	input_routine
-	call	password_check
-	call	open_tresor
-	jmp	main_loop
+	CALL	input_routine
+	CALL	password_check
+	CALL	open_tresor
+	JMP	main_loop
 
-	end
+end
